@@ -1,0 +1,12 @@
+{
+  "name": "molot. coffee",
+  "short_name": "molot.",
+  "description": "Меню, карта лояльности и предзаказ кофеен molot.",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbebd3",
+  "theme_color": "#fbebd3",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
