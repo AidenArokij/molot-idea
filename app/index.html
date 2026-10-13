@@ -4,94 +4,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>molot. — coffee, breakfast, food</title>
-<meta name="description" content="Кофейни molot. в Красноярске и Ачинске: меню, карта лояльности, предзаказ.">
+<meta name="description" content="Кофейни molot. в Красноярске и Ачинске: меню, заказ к времени, бонусы. Демо-прототип.">
 <meta name="theme-color" content="#fbebd3">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Caveat+Brush&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="app">
   <header class="top">
-    <a class="logo" href="#menu">molot.</a>
-    <button class="mood" id="moodBtn" aria-label="Настроение сезона">
-      <span class="mood-dot"></span><span id="moodName">Сейчас</span>
-    </button>
+    <a class="logo" href="#/home">molot.</a>
+    <span class="demo-badge">демо</span>
+    <a class="where" href="#/branches"><span id="branchTop"></span> ▾</a>
   </header>
-
-  <main>
-    <!-- МЕНЮ -->
-    <section class="view active" id="view-menu">
-      <div class="hero">
-        <p class="note">same place, new stories ♡</p>
-        <h1>Menù</h1>
-        <p class="sub">coffee · breakfast · food</p>
-        <svg class="hero-art" viewBox="0 0 200 170" aria-hidden="true">
-          <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M60 80h80l-8 62a10 10 0 0 1-10 8H78a10 10 0 0 1-10-8z"/>
-            <path d="M140 92h14a14 14 0 0 1 0 28h-10"/>
-            <path d="M82 60c-8-10 8-14 0-26M106 60c-8-10 8-14 0-26M130 60c-8-10 8-14 0-26"/>
-            <path d="M44 156h112"/>
-          </g>
-        </svg>
-        <p class="hours">8:00–20:00 · ежедневно</p>
-      </div>
-      <nav class="chips" id="chips"></nav>
-      <div id="menuList"></div>
-    </section>
-
-    <!-- КАРТА -->
-    <section class="view" id="view-card">
-      <h2 class="big">Карта<br>molot.</h2>
-      <p class="note">десятый кофе — в подарок ♡</p>
-      <div class="loyal" id="loyal"></div>
-      <button class="btn" id="stampBtn">Отсканировать чек (демо)</button>
-      <p class="fine">В живой версии штамп ставит бариста по QR-коду.</p>
-      <ul class="perks">
-        <li><b>Утренний час</b><span>–10% на кофе с 8 до 9</span></li>
-        <li><b>Новинки первыми</b><span>push, когда в меню что-то новое</span></li>
-        <li><b>Приведи друга</b><span>кофе в подарок вам обоим</span></li>
-      </ul>
-    </section>
-
-    <!-- ЗАКАЗ -->
-    <section class="view" id="view-cart">
-      <h2 class="big">Заказ</h2>
-      <div id="cartBody"></div>
-    </section>
-
-    <!-- ТОЧКИ -->
-    <section class="view" id="view-places">
-      <h2 class="big">Где нас найти</h2>
-      <p class="note">у каждого свой molot ♡</p>
-      <div id="places"></div>
-    </section>
-  </main>
-
-  <nav class="tabbar" id="tabbar">
-    <button data-view="menu" class="on"><i>☕</i>Меню</button>
-    <button data-view="card"><i>♡</i>Карта</button>
-    <button data-view="cart"><i>🛍</i>Заказ<em id="cartCount" hidden>0</em></button>
-    <button data-view="places"><i>⌖</i>Точки</button>
+  <main id="view"></main>
+  <div id="cartbar"></div>
+  <nav class="tabbar" id="tabbar" aria-label="Основная навигация">
+    <a href="#/home" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/></svg>Главная</a>
+    <a href="#/menu" data-tab="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M17 11h2a2 2 0 0 1 0 4h-2"/><path d="M9 3v3M13 3v3"/></svg>Меню</a>
+    <a href="#/orders" data-tab="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>Заказы</a>
+    <a href="#/profile" data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 5-7 8-7s7 2 8 7"/></svg>Профиль</a>
   </nav>
 </div>
-
-<!-- Настроение сезона -->
-<div class="sheet" id="moodSheet" hidden>
-  <div class="sheet-bg" data-close></div>
-  <div class="sheet-body">
-    <h3>Настроение сезона</h3>
-    <p class="fine">Владелец меняет стиль в один клик — меню, карта и кнопки перекрашиваются сами. Пробуйте:</p>
-    <div class="themes" id="themes"></div>
-  </div>
-</div>
-
-<div class="toast" id="toast" hidden></div>
-<script src="menu.js"></script>
+<div class="sheet" id="sheet" hidden></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<script src="data.js"></script>
+<script src="api.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
