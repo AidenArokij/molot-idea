@@ -2,6 +2,7 @@
   --bg: #fbebd3; --ink: #e0432a; --on-ink: #fbebd3; --card: rgba(224,67,42,.07);
   --text: #4a2a1e; --line: color-mix(in srgb, var(--ink) 30%, transparent);
   --ok: #2f7d4f; --warn: #b3261e;
+  --pad: 18px;
   --head: 'Caveat Brush', 'Caveat', 'Marker Felt', cursive;
   --hand: 'Caveat', cursive;
   --body: 'Lora', Georgia, serif;
@@ -18,7 +19,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
-.app { max-width: 520px; margin: 0 auto; min-height: 100dvh; padding: 0 18px 150px; position: relative; }
+.app { max-width: 520px; margin: 0 auto; min-height: 100dvh; padding: 0 var(--pad) 150px; position: relative; }
 @media (min-width: 560px) { .app { border-inline: 2px solid var(--ink); } }
 
 .top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 12px 0; padding-top: max(12px, env(safe-area-inset-top)); background: var(--bg); }
@@ -41,7 +42,7 @@ small { font-size: 13px; opacity: .8; font-style: italic; }
 .back { width: 44px; height: 44px; display: grid; place-items: center; font-size: 28px; color: var(--ink); margin-left: -10px; }
 
 .gtitle { font-size: 34px; margin: 22px 0 4px; }
-.checks { height: 36px; margin: 26px -18px 0; background: conic-gradient(var(--ink) 25%, transparent 0 50%, var(--ink) 0 75%, transparent 0) 0 0 / 36px 36px; }
+.checks { height: 36px; margin: 26px calc(var(--pad) * -1) 0; background: conic-gradient(var(--ink) 25%, transparent 0 50%, var(--ink) 0 75%, transparent 0) 0 0 / 36px 36px; }
 .checks.sm { height: 18px; margin: 14px -18px -18px; background-size: 18px 18px; border-radius: 0 0 20px 20px; }
 
 .block { border: 2px solid var(--ink); border-radius: 18px; padding: 14px 16px; margin: 14px 0; background: var(--card); }
@@ -172,3 +173,61 @@ legend { font-family: var(--hand); font-weight: 700; font-size: 22px; color: var
 
 .toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); background: var(--ink); color: var(--on-ink); padding: 10px 20px; border-radius: 999px; font-family: var(--hand); font-weight: 700; font-size: 22px; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
 .toast[hidden] { display: none; }
+
+/* ---------- Компьютер ---------- */
+.grid2 { display: block; }
+@media (min-width: 900px) {
+  :root { --pad: 40px; }
+  .app { max-width: 1120px; border-inline: 0; padding-bottom: 90px; }
+  .top { gap: 18px; padding: 10px 0; border-bottom: 2px solid var(--ink); }
+  .logo { font-size: 42px; }
+  .tabbar { position: static; transform: none; width: auto; margin-left: 28px; border: 0; padding: 0; background: none; gap: 6px; }
+  .tabbar a { flex: none; flex-direction: row; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; font-size: 22px; }
+  .tabbar a:hover { opacity: 1; background: var(--card); }
+  .tabbar a.on { background: var(--ink); color: var(--on-ink); }
+  .where { font-size: 24px; }
+  .back:hover, .btn:hover:not(:disabled), .catrow:hover, .strip:hover, .orow:hover { filter: brightness(.96); }
+  .btn { max-width: 420px; }
+  .btn.ghost:hover { background: var(--card); filter: none; }
+  .phead h1 { font-size: 52px; }
+
+  /* списки позиций — в две колонки */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; }
+  .item:hover .nm { color: var(--ink); }
+
+  /* главная */
+  #view[data-route=home] { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: 48px; align-content: start; }
+  #view[data-route=home] .hright > .block:first-child { margin-top: 0; }
+  #view[data-route=home] > .hero, #view[data-route=home] > .demonote, #view[data-route=home] > .checks { grid-column: 1 / -1; }
+  #view[data-route=home] .hero h1 { font-size: 84px; }
+  #view[data-route=home] .hcard { width: 180px; }
+  #view[data-route=home] .hcard .ph { height: 130px; }
+
+  /* меню: разделы сеткой */
+  #view[data-route=menu] #cats { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 40px; }
+  #view[data-route=menu] #cats .gtitle { grid-column: 1 / -1; }
+  #view[data-route=menu] .search { max-width: 420px; }
+
+  /* карточка позиции: фото слева, текст справа */
+  #view[data-route=item] { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; align-items: start; }
+  #view[data-route=item] > .phead { grid-column: 1 / -1; }
+  .ph.big { height: 420px; }
+  .ph.big svg { width: 40%; }
+  .idetail { padding-top: 0; }
+  .idetail h2 { font-size: 48px; }
+
+  /* формы и корзина — узкая колонка по центру */
+  #view[data-route=cart], #view[data-route=checkout], #view[data-route=auth], #view[data-route=profile], #view[data-route=settings],
+  #view[data-route=order], #view[data-route=loyalty], #view[data-route=bonus], #view[data-route=promos], #view[data-route=orders], #view[data-route=branches] { max-width: 680px; margin-inline: auto; }
+
+  .cartbar { bottom: 24px; width: 360px; left: auto; right: max(24px, calc(50% - 560px + 24px)); transform: none; }
+  .toast { bottom: 90px; }
+  .sheet { align-items: center; }
+  .sheet-body { width: 480px; border: 2px solid var(--ink); border-radius: 26px; }
+  .checks { height: 44px; background-size: 44px 44px; }
+}
+@media (min-width: 900px) and (hover: hover) { .add:hover, .fav:hover, .qty button:hover { background: var(--ink); color: var(--on-ink); } }
+
+@media (min-width: 900px) {
+  #view[data-route=cart] .checks, #view[data-route=checkout] .checks, #view[data-route=orders] .checks, #view[data-route=order] .checks, #view[data-route=loyalty] .checks, #view[data-route=promos] .checks { margin-inline: 0; }
+}

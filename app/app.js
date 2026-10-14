@@ -58,6 +58,7 @@ function render() {
   for (const [re, fn] of routes) { const m = h.match(re); if (m) { view = fn(...m.slice(1)); break; } }
   if (!view) view = notFound();
   $('#view').innerHTML = view;
+  $('#view').dataset.route = h.split('/')[1] || 'home';
   const showBar = cartCount() > 0 && !/^\/(cart|checkout|auth|order\/)/.test(h);
   const c = q();
   $('#cartbar').innerHTML = showBar ? `<a class="cartbar" href="#/cart"><span>Корзина · ${cartCount()}</span><b>${rub(c.total + c.bonusUsed * CONFIG.bonusRub + c.discount)}</b></a>` : '';
@@ -87,15 +88,21 @@ const stateEmpty = (note, text, btn) => `<div class="empty"><svg viewBox="0 0 20
 
 function slots(branch) {
   const off = 7 * 3600e3; // Красноярск UTC+7
+  const fmt = t => String(t.getUTCHours()).padStart(2, '0') + ':' + String(t.getUTCMinutes()).padStart(2, '0');
   const t = new Date(Date.now() + off + 20 * 60e3);
   t.setUTCMinutes(Math.ceil(t.getUTCMinutes() / 15) * 15, 0, 0);
   const out = [];
   for (let i = 0; i < 12 && out.length < 8; i++, t.setUTCMinutes(t.getUTCMinutes() + 15)) {
     const hh = t.getUTCHours(); if (hh < branch.open[0] || hh >= branch.open[1]) continue;
-    out.push(String(hh).padStart(2, '0') + ':' + String(t.getUTCMinutes()).padStart(2, '0'));
+    out.push(fmt(t));
   }
+  if (out.length) return out;
+  // Сегодня уже не успеть: предзаказ на завтра с открытия
+  const d = new Date(0); d.setUTCHours(branch.open[0], 0, 0, 0);
+  for (let i = 0; i < 6; i++, d.setUTCMinutes(d.getUTCMinutes() + 15)) out.push('завтра ' + fmt(d));
   return out;
 }
+const pickupText = p => p === 'asap' ? 'как можно скорее' : p.startsWith('завтра') ? p : 'к ' + p;
 const fmtDate = ts => new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Krasnoyarsk' });
 const myOrdersList = () => { syncBonus(); const all = srv.orders(); return S.myOrders.map(id => Object.values(all).find(o => o.id === id)).filter(Boolean).sort((a, b) => b.createdAt - a.createdAt); };
 
@@ -106,11 +113,11 @@ route(/^\/home$/, () => {
   const bn = srv.bonus();
   return `
   <section class="hero"><p class="note">${S.user ? 'привет, ' + esc(S.user.name) : 'привет'} ♡</p><h1>good coffee,<br>better days</h1></section>
-  <a class="branchpill" href="#/branches"><span class="dot ${open ? 'on' : ''}"></span><span><b>${esc(b.city)}, ${esc(b.name)}</b><small>${open ? 'открыто до ' + b.open[1] + ':00' : 'сейчас закрыто, открываемся в ' + b.open[0] + ':00'}</small></span><i>сменить</i></a>
+  <div class="hleft"><a class="branchpill" href="#/branches"><span class="dot ${open ? 'on' : ''}"></span><span><b>${esc(b.city)}, ${esc(b.name)}</b><small>${open ? 'открыто до ' + b.open[1] + ':00' : 'сейчас закрыто, открываемся в ' + b.open[0] + ':00'}</small></span><i>сменить</i></a>
   ${last ? `<div class="block"><h3>Как обычно</h3><p>${esc(last.lines.map(l => l.name).join(', '))}</p><button class="btn" data-repeat="${last.id}">Повторить заказ</button></div>` : ''}
   <a class="strip" href="${S.user ? '#/loyalty' : '#/auth'}"><span>Бонусы <small>демо</small></span><b>${S.user ? bn.balance : '—'}</b><i>${S.user ? 'карта →' : 'войти →'}</i></a>
-  <a class="strip" href="#/promos"><span>Акции и промокоды</span><b>${PROMOS.length}</b><i>смотреть →</i></a>
-  ${NEWS.map(n => `<div class="block"><h3>${esc(n.title)}</h3><p class="fine">${esc(n.text)}</p><div class="hrow">${n.items.map(id => `<a class="hcard" href="#/item/${id}">${ph(ITEMS[id])}<span>${esc(ITEMS[id].n)}</span><b>${rub(fromPrice(ITEMS[id]))}</b></a>`).join('')}</div></div>`).join('')}
+  <a class="strip" href="#/promos"><span>Акции и промокоды</span><b>${PROMOS.length}</b><i>смотреть →</i></a></div>
+  <div class="hright">${NEWS.map(n => `<div class="block"><h3>${esc(n.title)}</h3><p class="fine">${esc(n.text)}</p><div class="hrow">${n.items.map(id => `<a class="hcard" href="#/item/${id}">${ph(ITEMS[id])}<span>${esc(ITEMS[id].n)}</span><b>${rub(fromPrice(ITEMS[id]))}</b></a>`).join('')}</div></div>`).join('')}</div>
   <p class="demonote">Демо-версия. Меню по Instagram-историям от 8 сентября, цены и акции не являются актуальными.</p>${checks}`;
 });
 
@@ -124,7 +131,7 @@ route(/^\/menu$/, () => `
 // ---------- 3. Категория ----------
 route(/^\/cat\/([\w-]+)$/, id => {
   const c = MENU.find(x => x.id === id); if (!c) return notFound();
-  return `${head(esc(c.title), '#/menu')}${c.items.map(itemRow).join('')}${checks}`;
+  return `${head(esc(c.title), '#/menu')}<div class="grid2">${c.items.map(itemRow).join('')}</div>${checks}`;
 });
 
 // ---------- 4. Карточка позиции ----------
@@ -132,7 +139,7 @@ route(/^\/item\/([\w-]+)$/, id => {
   const it = ITEMS[id]; if (!it) return notFound();
   const off = !available(id, S.branch), fav = S.favs.includes(id), simple = it.p.length === 1 && it.mods.length === 0;
   return `${head('', '#/cat/' + it.cat)}
-  ${ph(it, true)}
+  <div class="iphoto">${ph(it, true)}</div>
   <div class="idetail"><h2>${esc(it.n)}${badges(it)}</h2>
   <p class="fine">${esc(it.v.join(' / '))}</p>
   ${it.note ? `<p>На выбор: ${esc(it.note)}.</p>` : ''}
@@ -195,13 +202,13 @@ route(/^\/checkout$/, () => {
   <div class="block"><h3>Где и когда</h3>
     <p><b>${esc(b.city)}, ${esc(b.name)}</b> <a class="link" href="#/branches">сменить</a></p>
     <label class="field">Время получения<select id="pickup">${open ? '<option value="asap">как можно скорее (около 10 минут)</option>' : ''}${sl.map(t => `<option value="${t}">${t}</option>`).join('')}</select></label>
-    ${!open && !sl.length ? '<p class="warn">Сегодня точка уже закрыта.</p>' : ''}
+    ${!open ? `<p class="fine">Сейчас точка закрыта (${b.open[0]}:00–${b.open[1]}:00 по Красноярску). Можно заказать к ближайшему времени.</p>` : ''}
   </div>
   <div class="block"><h3>Контакты</h3>${S.user ? `<p>${esc(S.user.name)}, ${esc(S.user.phone)}</p>` : `<p>Чтобы оформить заказ, нужен вход по телефону.</p><a class="btn ghost" href="#/auth">Войти</a>`}</div>
   <div class="block"><h3>Оплата</h3><p>На точке при получении. Онлайн-оплата пока не подключена.</p></div>
   <div class="sum"><div><span>Позиции</span><span>${rub(c.subtotal)}</span></div>${c.discount ? `<div><span>Промокод</span><span>−${rub(c.discount)}</span></div>` : ''}${c.bonusUsed ? `<div><span>Бонусы</span><span>−${rub(c.bonusUsed)}</span></div>` : ''}<div class="total"><span>Итого</span><span>${rub(c.total)}</span></div></div>
   ${checkout.state === 'error' ? `<div class="alert"><b>${esc(checkout.error)}</b><p>Заказ мог дойти до кофейни. Нажмите «Проверить и отправить»: повторный запрос не создаст дубль.</p></div>` : ''}
-  <button class="btn" data-place ${sending || !S.user || c.blocked.length || (!open && !sl.length) ? 'disabled' : ''}>${sending ? 'Отправляем…' : checkout.state === 'error' ? 'Проверить и отправить' : 'Подтвердить заказ'}</button>
+  <button class="btn" data-place ${sending || !S.user || c.blocked.length ? 'disabled' : ''}>${sending ? 'Отправляем…' : checkout.state === 'error' ? 'Проверить и отправить' : 'Подтвердить заказ'}</button>
   <p class="fine">Заказ считается оформленным, когда его подтвердит сервер. Только после этого вы увидите номер.</p>`;
 });
 
@@ -243,7 +250,7 @@ route(/^\/order\/([\w]+)$/, id => {
     ${cancelled ? '<p class="warn">Заказ отменён.</p>' : `<ol class="steps">${STATUSES.slice(0, 5).map((s, i) => `<li class="${i < idx ? 'done' : i === idx ? 'cur' : ''}">${s}</li>`).join('')}</ol>`}
   </div>
   <p class="demonote">Демо: статусы сменяются сами. В боевой версии их выставляет сотрудник.</p>
-  <div class="block"><h3>Получение</h3><p>${esc(b.city)}, ${esc(b.name)}<br>${o.pickup === 'asap' ? 'как можно скорее' : 'к ' + esc(o.pickup)}</p></div>
+  <div class="block"><h3>Получение</h3><p>${esc(b.city)}, ${esc(b.name)}<br>${esc(pickupText(o.pickup))}</p></div>
   <div class="block"><h3>Состав</h3>${o.lines.map(l => `<div class="sline"><span>${l.qty} × ${esc(l.name)}${l.labels.length ? ` <small>${esc(l.labels.join(', '))}</small>` : ''}</span><span>${rub(l.total)}</span></div>`).join('')}
   ${o.discount ? `<div class="sline"><span>Промокод ${esc(o.promo)}</span><span>−${rub(o.discount)}</span></div>` : ''}${o.bonusUsed ? `<div class="sline"><span>Бонусы</span><span>−${o.bonusUsed}</span></div>` : ''}
   <div class="total"><span>Итого</span><span>${rub(o.total)}</span></div><p class="fine">Оплата на точке при получении.</p></div>
@@ -323,7 +330,7 @@ route(/^\/promos$/, () => {
 });
 
 // ---------- 16. Избранное ----------
-route(/^\/favs$/, () => `${head('Избранное', '#/profile')}${S.favs.length ? S.favs.map(id => ITEMS[id]).filter(Boolean).map(itemRow).join('') : stateEmpty('пока пусто', 'Нажмите ♡ у любимой позиции.', '<a class="btn" href="#/menu">В меню</a>')}`);
+route(/^\/favs$/, () => `${head('Избранное', '#/profile')}${S.favs.length ? '<div class="grid2">' + S.favs.map(id => ITEMS[id]).filter(Boolean).map(itemRow).join('') + '</div>' : stateEmpty('пока пусто', 'Нажмите ♡ у любимой позиции.', '<a class="btn" href="#/menu">В меню</a>')}`);
 
 // ---------- 17. Настройки и согласия ----------
 route(/^\/settings$/, () => `${head('Настройки', '#/profile')}
@@ -390,7 +397,7 @@ document.addEventListener('input', e => {
   if (!v) { box.innerHTML = ''; $('#cats').hidden = false; return; }
   $('#cats').hidden = true;
   const res = Object.values(ITEMS).filter(it => it.n.toLowerCase().includes(v));
-  box.innerHTML = res.length ? res.map(itemRow).join('') : stateEmpty('не нашли', 'Попробуйте другое слово.');
+  box.innerHTML = res.length ? '<div class="grid2">' + res.map(itemRow).join('') + '</div>' : stateEmpty('не нашли', 'Попробуйте другое слово.');
 });
 
 // ---------- Тема ----------
